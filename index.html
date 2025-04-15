@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title>Arturo el Adivino</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f8f9fa; --text-color: #212529; --input-bg: #fff;
+            --input-border: #ccc; --input-text: #212529; --cursor-color: black;
+            --button-bg: #0d6efd; --button-text: white; --button-border: #0d6efd;
+            --button-hover-bg: #0b5ed7; --button-hover-border: #0a58ca;
+            /* Colores Flash/Fondo */
+            --flash-success-bg: #d1e7dd; /* Verde */
+            --flash-error-bg:   #f8d7da; /* Rojo */
+            --flash-cansado-bg: #fef0d9; /* Marrón/Arena claro (Bootstrap warning-subtle) */
+        }
+        body.dark-mode {
+            --bg-color: #212529; --text-color: #f8f9fa; --input-bg: #343a40;
+            --input-border: #6c757d; --input-text: #f8f9fa; --cursor-color: #f8f9fa;
+            --button-bg: #6c757d; --button-text: white; --button-border: #6c757d;
+            --button-hover-bg: #5c636a; --button-hover-border: #565e64;
+            /* Colores Flash/Fondo Modo Oscuro */
+            --flash-success-bg: #0f5132;
+            --flash-error-bg:   #842029;
+            --flash-cansado-bg: #664d03; /* Marrón/Arena oscuro (Bootstrap warning-subtle) */
+            --dark-response-text-color: #f8f9fa;
+        }
+        body {
+            font-family: sans-serif; padding: 20px; background-color: var(--bg-color);
+            color: var(--text-color); transition: background-color 0.3s, color 0.3s;
+            display: flex; flex-direction: column; align-items: center; min-height: 100vh;
+        }
+        h1 { margin-bottom: 15px; text-align: center; }
+        p { margin-bottom: 10px; font-style: italic; text-align: center; }
+
+        #output {
+            border: 1px solid var(--input-border); padding: 8px 12px; min-height: 1.8em;
+            font-size: 1.2em; background-color: var(--input-bg); color: var(--input-text);
+            width: 100%; box-sizing: border-box; margin-top: 5px; margin-bottom: 15px;
+            white-space: normal; overflow-wrap: break-word; line-height: 1.5;
+            transition: border-color 0.3s, color 0.3s; max-width: 600px;
+            text-align: left; animation: none;
+        }
+
+        /* --- Animaciones Flash (con color final permanente) --- */
+        @keyframes flash-success {
+            0% { background-color: var(--input-bg); }
+            50%, 100% { background-color: var(--flash-success-bg); }
+        }
+        @keyframes flash-error {
+            0% { background-color: var(--input-bg); }
+            50%, 100% { background-color: var(--flash-error-bg); }
+        }
+        /* --- NUEVA Animación Cansado --- */
+        @keyframes flash-cansado {
+            0% { background-color: var(--input-bg); }
+            50%, 100% { background-color: var(--flash-cansado-bg); } /* Mantiene color cansado */
+        }
+
+        /* --- Clases para Estado de Respuesta --- */
+        #output.output-respuesta-exito,
+        #output.output-respuesta-error,
+        #output.output-respuesta-cansado { /* Añadida clase cansado */
+            font-size: 2em;
+            text-align: center;
+            color: var(--input-text);
+        }
+        /* Ajuste color texto modo oscuro */
+        body.dark-mode #output.output-respuesta-exito,
+        body.dark-mode #output.output-respuesta-error,
+        body.dark-mode #output.output-respuesta-cansado { /* Añadida clase cansado */
+             color: var(--dark-response-text-color);
+        }
+
+        /* Asignar animaciones específicas */
+        #output.output-respuesta-exito { animation: flash-success 0.7s ease-in-out forwards; }
+        #output.output-respuesta-error { animation: flash-error 0.7s ease-in-out forwards; }
+        #output.output-respuesta-cansado { animation: flash-cansado 0.7s ease-in-out forwards; } /* Nueva asignación */
+
+
+        #output-text { }
+        #cursor {
+            display: inline-block; width: 1px; height: 1.4em; background-color: var(--cursor-color);
+            margin-left: 1px; vertical-align: bottom; animation: blink 1s step-end infinite;
+            transition: background-color 0.3s;
+        }
+        @keyframes blink { from, to { background-color: transparent; } 50% { background-color: var(--cursor-color); } }
+        #buttonContainer { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .custom-button { padding: 10px 15px; font-size: 1em; cursor: pointer; border-radius: 5px; transition: background-color 0.2s, border-color 0.2s, color 0.2s; border: none; }
+        #sendButton { background-color: var(--button-bg); color: var(--button-text); border: 1px solid var(--button-border); }
+        #sendButton:hover { background-color: var(--button-hover-bg); border-color: var(--button-hover-border); }
+        #reloadButton { background-color: #dc3545; color: white; border: 1px solid #dc3545; }
+        #reloadButton:hover { background-color: #c82333; border-color: #bd2130; }
+        #imageContainer { text-align: center; margin-bottom: 20px; }
+        #imageContainer img { max-width: 200px; height: auto; }
+        .centered-output { display: flex; justify-content: center; width: 100%; }
+    </style>
+</head>
+<body class="dark-mode">
+    <div class="container">
+        <div id="imageContainer">
+            <img src="adivino.png" alt="Arturo el Adivino">
+        </div>
+        <h1>Soy ARTURO el ADIVINO</h1>
+        <p>Si quieres que te responda, debes pedirmelo con respeto.<br>COMIENZA SIEMPRE CON: "Por favor responde a lo que te pido:"</p>
+
+        <div class="centered-output">
+            <div id="output" aria-live="polite">
+                <span id="output-text"></span><span id="cursor"></span>
+            </div>
+        </div>
+
+        <div id="buttonContainer">
+            <button id="reloadButton" class="custom-button">Recargar</button>
+            <button id="sendButton" class="custom-button">Enviar Petición</button>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fraseObjetivo = "Por favor responde a lo que te pido: ";
+            let fraseReal = "";
+            let indiceMaquillado = 0;
+            const outputDiv = document.getElementById('output');
+            const outputTextSpan = document.getElementById('output-text');
+            const sendButton = document.getElementById('sendButton');
+            const reloadButton = document.getElementById('reloadButton');
+            const cursorSpan = document.getElementById('cursor');
+            let modoOcultacionActivo = null;
+            let escuchando = true;
+            const initialText = "";
+            const frasesError = [
+                "Así no, gracias", "Inténtalo de nuevo", "No me apetece responder así",
+                "Con más respeto, por favor", "No respondo a eso", "Demasiado directo",
+                "Prueba con 'por favor'", "Así no funciona", "Sé más amable",
+                "¿Puedes reformular?", "No con esa actitud", "Falta cortesía",
+                "Inténtalo con educación", "No voy a responder a eso así",
+                "Empieza de nuevo con buenos modales", "No me gustan esas formas", "Pregunta mejor."
+            ];
+            // --- NUEVO Array de frases Cansado ---
+            const frasesCansado = [
+                "Estoy agotado.", "Necesito dormir.", "Sin energía hoy.", "Estoy hecho polvo.",
+                "Cansancio extremo.", "No doy para más.", "Necesito un respiro.", "Batería baja.",
+                "Estoy fundido.", "Necesito un café.", "Muerto de sueño.", "Sin fuerzas.", "Exhausto total."
+            ];
+
+            function resetOutputState() {
+                console.log("Reseteando estado...");
+                // Asegurarse de quitar TODAS las clases de respuesta
+                outputDiv.classList.remove(
+                    'output-respuesta-exito',
+                    'output-respuesta-error',
+                    'output-respuesta-cansado' // Quitar también la nueva clase
+                );
+                outputDiv.style.animation = 'none';
+                outputDiv.offsetHeight;
+                outputTextSpan.textContent = initialText;
+                outputDiv.style.fontSize = '';
+                outputDiv.style.textAlign = '';
+                cursorSpan.style.display = 'inline-block';
+                escuchando = true;
+                modoOcultacionActivo = null;
+                indiceMaquillado = 0;
+                fraseReal = "";
+            }
+
+            resetOutputState();
+
+            function handleKeyDown(event) {
+                // ... (sin cambios en handleKeyDown)
+                 if (!escuchando) {
+                    if (event.key === 'Backspace') {
+                        event.preventDefault();
+                        resetOutputState();
+                    }
+                    return;
+                }
+                const tecla = event.key;
+                if (tecla === 'Backspace') {
+                    event.preventDefault();
+                    let outputActual = outputTextSpan.textContent;
+                    if (outputActual.length > 0) {
+                        outputTextSpan.textContent = outputActual.slice(0, -1);
+                        if (modoOcultacionActivo === true && fraseReal.length > 0) {
+                            fraseReal = fraseReal.slice(0, -1);
+                             if (indiceMaquillado > 0 && outputTextSpan.textContent.length < fraseObjetivo.length) {
+                                indiceMaquillado = outputTextSpan.textContent.length;
+                            }
+                        }
+                        if (outputTextSpan.textContent.length === 0) {
+                            modoOcultacionActivo = null;
+                            indiceMaquillado = 0;
+                            fraseReal = "";
+                        }
+                    }
+                    return;
+                }
+                 if (tecla === '-') {
+                    if (modoOcultacionActivo === true || modoOcultacionActivo === null) {
+                        event.preventDefault();
+                        modoOcultacionActivo = false;
+                        console.log("Modo oculto desactivado por '-'.");
+                        return;
+                    }
+                }
+                if (tecla.length > 1) { return; }
+                if (modoOcultacionActivo === null) {
+                    if (tecla === '+') {
+                        event.preventDefault();
+                        modoOcultacionActivo = true;
+                        console.log("Modo oculto activado por '+'.");
+                        if (fraseObjetivo.length > 0 && outputTextSpan.textContent === "") {
+                            outputTextSpan.textContent = fraseObjetivo[0];
+                            indiceMaquillado = 1;
+                        }
+                        return;
+                    } else {
+                        modoOcultacionActivo = false;
+                        console.log("Modo normal activado.");
+                        outputTextSpan.textContent += tecla;
+                        return;
+                    }
+                }
+                if (modoOcultacionActivo === true) {
+                    event.preventDefault();
+                    fraseReal += tecla;
+                    if (indiceMaquillado < fraseObjetivo.length) {
+                        outputTextSpan.textContent += fraseObjetivo[indiceMaquillado];
+                        indiceMaquillado++;
+                    } else {
+                        outputTextSpan.textContent += " ";
+                    }
+                } else {
+                    outputTextSpan.textContent += tecla;
+                }
+            }
+
+            sendButton.addEventListener('click', function() {
+                const textoVisible = outputTextSpan.textContent.trim();
+                // Limpiar clases y animación
+                outputDiv.classList.remove(
+                    'output-respuesta-exito',
+                    'output-respuesta-error',
+                    'output-respuesta-cansado' // Quitar también la nueva
+                );
+                outputDiv.style.animation = 'none';
+                outputDiv.offsetHeight;
+
+                if (fraseReal) {
+                    // --- Caso 1: Éxito ---
+                    console.log("Mostrando éxito:", fraseReal);
+                    outputTextSpan.textContent = fraseReal;
+                    outputDiv.classList.add('output-respuesta-exito');
+                    outputDiv.style.animation = '';
+
+                } else {
+                    // --- Caso 2: Fracaso (sin fraseReal) ---
+                    if (textoVisible.startsWith(fraseObjetivo)) {
+                        // Subcaso 2.1: Cansado (visible empieza con frase objetivo)
+                        const indiceAleatorio = Math.floor(Math.random() * frasesCansado.length);
+                        const mensajeCansadoAleatorio = frasesCansado[indiceAleatorio];
+                        console.log("Mostrando 'cansado':", mensajeCansadoAleatorio);
+                        outputTextSpan.textContent = mensajeCansadoAleatorio; // Usar frase aleatoria
+                        outputDiv.classList.add('output-respuesta-cansado'); // Aplicar clase cansado
+                        outputDiv.style.animation = '';
+
+                    } else {
+                        // Subcaso 2.2: Error estándar (visible no empieza con frase objetivo)
+                        const indiceAleatorio = Math.floor(Math.random() * frasesError.length);
+                        const mensajeErrorAleatorio = frasesError[indiceAleatorio];
+                        console.log("Mostrando error aleatorio:", mensajeErrorAleatorio);
+                        outputTextSpan.textContent = mensajeErrorAleatorio;
+                        outputDiv.classList.add('output-respuesta-error'); // Aplicar clase error
+                        outputDiv.style.animation = '';
+                    }
+                }
+
+                cursorSpan.style.display = 'none';
+                escuchando = false;
+            });
+
+            reloadButton.addEventListener('click', function() {
+                location.reload();
+            });
+
+            document.addEventListener('keydown', handleKeyDown);
+
+        });
+    </script>
+</body>
+</html>
