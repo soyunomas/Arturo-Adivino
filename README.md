@@ -1,4 +1,4 @@
-# 🔮 Arturo el Adivino
+# 🔮 Arturo el Adivino (Solo para PC)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Demo - Pruébalo](https://img.shields.io/badge/Demo-Pruébalo-brightgreen)](https://soyunomas.github.io/Arturo-Adivino/) 
 
